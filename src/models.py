@@ -13,14 +13,12 @@ Base = database.Base
 class User(Base, BaseUser, UserPermissionsMixin, UserSessionsMixin):
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True)
-
     def init_permissions(self):
         session = object_session(self)
         if session is None:
             session = database.DBSession
         for permission in ['start_menu_access',
-                           'change_language_menu_access']:
+                           ]:
             perm = session.query(Permission).get(permission)
             if perm not in self.permissions:
                 self.permissions.append(perm)

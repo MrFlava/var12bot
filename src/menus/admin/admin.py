@@ -34,16 +34,13 @@ class AdminMenu(BaseMenu):
 
     def send_message(self, context):
         user = context.user_data['user']
-        _ = user.translator
 
         buttons = []
 
-        buttons.append(InlineKeyboardButton(_("Distribution"), callback_data='distribution'))
+        buttons.append(InlineKeyboardButton("Работа с налоговыми службами", callback_data='taxation_services'))
+        buttons.append(InlineKeyboardButton("Вернуться к главному меню", callback_data='start'))
 
-        buttons.append(InlineKeyboardButton(_("Settings"), callback_data='settings'))
-        buttons.append(InlineKeyboardButton(_("Back to main menu"), callback_data='start'))
-
-        send_or_edit(context, chat_id=user.chat_id, text=_("Admin menu:"), reply_markup=InlineKeyboardMarkup(group_buttons(buttons, 1)))
+        send_or_edit(context, chat_id=user.chat_id, text="Админ меню:", reply_markup=InlineKeyboardMarkup(group_buttons(buttons, 1)))
 
     def goto_next_menu(self, update, context):
         context.update_queue.put(update)

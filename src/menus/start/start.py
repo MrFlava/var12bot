@@ -1,7 +1,7 @@
 import enum
 
 from botmanlib.menus.basemenu import BaseMenu
-from botmanlib.menus.helpers import add_to_db, prepare_user, require_permission
+from botmanlib.menus.helpers import prepare_user
 from botmanlib.messages import send_or_edit, delete_interface, delete_user_message
 from telegram import TelegramError, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ConversationHandler, CallbackQueryHandler, Filters, MessageHandler, PrefixHandler
@@ -14,12 +14,9 @@ class StartMenu(BaseMenu):
 
     class States(enum.Enum):
         ACTION = 1
-        LANGUAGE = 2
 
     def entry(self, update, context):
         user = prepare_user(User, update, context)
-
-        _ = user.translator
 
         if self.menu_name not in context.user_data:
             context.user_data[self.menu_name] = {}
@@ -39,45 +36,12 @@ class StartMenu(BaseMenu):
 
     def send_message(self, context):
         user = context.user_data['user']
-        _ = user.translator
-        message_text = _("Select action")
 
-        buttons = [[InlineKeyboardButton(_("Create order"), callback_data='make_order'),
-                        InlineKeyboardButton(_("My orders"), callback_data='my_orders')],
-                       [InlineKeyboardButton(_("Profile"), callback_data='profile'),
-                        InlineKeyboardButton(_("Change language"), callback_data='language')]]
+        message_text = "Приветствую, я бот для мониторинга налоговых служб"
+
+        buttons = [[InlineKeyboardButton("Налоговые службы", callback_data='taxation_services')]]
 
         send_or_edit(context, chat_id=user.chat_id, text=message_text, reply_markup=InlineKeyboardMarkup(buttons))
-        return self.States.ACTION
-
-    def ask_language(self, update, context):
-        user = context.user_data['user']
-        _ = user.translator
-
-        buttons = [[InlineKeyboardButton("Українська", callback_data='language_uk')],
-                   [InlineKeyboardButton("Русский", callback_data='language_ru')]]
-        send_or_edit(context, chat_id=user.chat_id, text=_("Select a language:"),
-                     reply_markup=InlineKeyboardMarkup(buttons))
-        return self.States.LANGUAGE
-
-    def set_language(self, update, context):
-        user = context.user_data['user']
-        _ = user.translator
-
-        value = update.callback_query.data.replace("language_", "")
-
-        if value == 'ru':
-            user.language_code = 'ru'
-        elif value == 'uk':
-            user.language_code = 'uk'
-        else:
-            user.language_code = 'ru'
-
-        add_to_db(user)
-        context.user_data['_'] = _ = user.translator
-
-        self.send_message(context)
-
         return self.States.ACTION
 
     def goto_next_menu(self, update, context):
@@ -89,14 +53,8 @@ class StartMenu(BaseMenu):
         handler = ConversationHandler(entry_points=[PrefixHandler('/', 'start', self.entry),
                                                     CallbackQueryHandler(self.entry, pattern='^start$')],
                                       states={
-                                          self.States.ACTION: [PrefixHandler('/', 'admin', self.goto_next_menu),
-                                                               CallbackQueryHandler(self.ask_language,
-                                                                                    pattern="^language$"),
-                                                               ],
-
-                                          self.States.LANGUAGE: [
-                                              CallbackQueryHandler(self.set_language, pattern="^language_\w\w$")],
-
+                                          self.States.ACTION: [PrefixHandler('/', 'admin', self.goto_next_menu)
+                                                               ]
                                       },
                                       fallbacks=[MessageHandler(Filters.all,
                                                                 lambda update, context: delete_user_message(update))],
