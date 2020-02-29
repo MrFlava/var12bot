@@ -28,6 +28,26 @@ class Permission(BasePermission, Base):
     __tablename__ = 'permissions'
 
 
+class ServiceType(enum.Enum):
+    urban = 'urban'
+    district = 'district'
+    regional = 'regional'
+
+
+class TaxationService(Base):
+    __tablename__ = 'taxation_services'
+
+    id = Column(Integer, primary_key=True)
+    type = Column(Enum(ServiceType), default=ServiceType.regional)
+    name = Column(String, nullable=False)
+    city = Column(String, nullable=False)
+    year = Column(Integer, nullable=False)
+    phone = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+
+    # employees = relationship("Player", back_populates='team', cascade='all ,delete')
+
+
 class UserSession(BaseUserSession, Base):
     __tablename__ = 'user_sessions'
 
