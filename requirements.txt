@@ -1,0 +1,8 @@
+sqlalchemy
+alembic
+psycopg2-binary
+FormEncode
+beautifulsoup4
+git+https://github.com/python-telegram-bot/python-telegram-bot.git@master#egg=python-telegram-bot
+dill
+urllib3
