@@ -17,6 +17,7 @@ class EmployeesMenu(OneListMenu):
 
     class States(enum.Enum):
         ACTION = 1
+        ASK_PAYMENT = 2
 
     def entry(self, update, context):
         return super(EmployeesMenu, self).entry(update, context)
@@ -43,13 +44,29 @@ class EmployeesMenu(OneListMenu):
 
             return message_text
 
+    def ask_payment(self, update, context):
+        user = context.user_data['user']
+        service = self.parent.selected_object(context)
+        payment = DBSession.query(Payment).filter(Payment.taxation_service_id == service.id).first()
+        employee = self.selected_object(context)
+        buttons = []
+        employee_payment_aosc = DBSession.query(EmployeePayment).get((employee.id, payment.id))
+        if employee_payment_aosc:
+            message_text = "Оформленные платежи" + '\n'
+            message_text += f"Дата: {payment.date.strftime('%d.%m.%Y ')}" + '\n'
+            message_text += f"Сумма: {payment.amount}" + '\n'
+            message_text += f"Тип: {payment.type.to_str()}" + '\n'
+        else:
+            message_text = "Данные о оформленных платежах отсутствуют!"
+        buttons.append([InlineKeyboardButton("🔙 Back", callback_data=f'back_to_employee')])
+        send_or_edit(context, chat_id=user.chat_id, text=message_text, reply_markup=InlineKeyboardMarkup(buttons, resize_keyboard=True))
+        return self.States.ASK_PAYMENT
+
     def back_button(self, context):
         return InlineKeyboardButton("🔙 Назад", callback_data=f"back_{self.menu_name}")
 
     def object_buttons(self, context, obj):
-
         buttons = []
-
         if obj:
             buttons.append(InlineKeyboardButton("Оформление оплаты", callback_data='employee_payment'))
         return group_buttons(buttons, 1)
@@ -60,4 +77,5 @@ class EmployeesMenu(OneListMenu):
 
     def additional_states(self):
 
-        return {self.States.ACTION: []}
+        return {self.States.ACTION: [CallbackQueryHandler(self.ask_payment, pattern='^employee_payment$')],
+                self.States.ASK_PAYMENT: [CallbackQueryHandler(self.back_to_employee, pattern='^back_to_employee$')]}

@@ -24,7 +24,7 @@ class ServiceEmployeesMenu(OneListMenu):
     class States(enum.Enum):
         ACTION = 1
         ASK_EDUCATION = 2
-        # ASK_GAME = 3
+        ASK_PAYMENT = 3
 
     def entry(self, update, context):
         return super(ServiceEmployeesMenu, self).entry(update, context)
@@ -71,19 +71,23 @@ class ServiceEmployeesMenu(OneListMenu):
             buttons.append(InlineKeyboardButton("Удалить данные сотрудника", callback_data=f"delete_{self.menu_name}"))
         return group_buttons(buttons, 1)
 
-    # def ask_game(self, update, context):
-    #     user = context.user_data['user']
-    #     team = self.parent.selected_object(context)
-    #     game = DBSession.query(Game).filter(Game.team_id == team.id).first()
-    #     player = self.selected_object(context)
-    #     buttons = []
-    #     player_game_aosc = DBSession.query(PlayerGame).get((player.id, game.id))
-    #     message_text = "Участие в игре" + '\n'
-    #     message_text += f"Денежная премия: {player_game_aosc.cash_bonus} UAH" + '\n'
-    #     message_text += f"Нарушение: {player_game_aosc.player_violations_str()}" + '\n'
-    #     buttons.append([InlineKeyboardButton("🔙 Back", callback_data=f'back_to_player')])
-    #     send_or_edit(context, chat_id=user.chat_id, text=message_text, reply_markup=InlineKeyboardMarkup(buttons, resize_keyboard=True))
-    #     return self.States.ASK_GAME
+    def ask_payment(self, update, context):
+        user = context.user_data['user']
+        service = self.parent.selected_object(context)
+        payment = DBSession.query(Payment).filter(Payment.taxation_service_id == service.id).first()
+        employee = self.selected_object(context)
+        buttons = []
+        employee_payment_aosc = DBSession.query(EmployeePayment).get((employee.id, payment.id))
+        if employee_payment_aosc:
+            message_text = "Оформленные платежи" + '\n'
+            message_text += f"Дата: {payment.date.strftime('%d.%m.%Y ')}" + '\n'
+            message_text += f"Сумма: {payment.amount}" + '\n'
+            message_text += f"Тип: {payment.type.to_str()}" + '\n'
+        else:
+            message_text = "Данные о оформленных платежах отсутствуют!"
+        buttons.append([InlineKeyboardButton("🔙 Back", callback_data=f'back_to_employee')])
+        send_or_edit(context, chat_id=user.chat_id, text=message_text, reply_markup=InlineKeyboardMarkup(buttons, resize_keyboard=True))
+        return self.States.ASK_PAYMENT
 
     def ask_change_education(self, update, context):
         delete_refresh_job(context)
@@ -119,9 +123,11 @@ class ServiceEmployeesMenu(OneListMenu):
         edit_emplpyee = EmployeeEditMenu(self)
         return {self.States.ACTION: [add_employee.handler,
                                      edit_emplpyee.handler,
-                                     CallbackQueryHandler(self.ask_change_education, pattern='^change_education$')],
+                                     CallbackQueryHandler(self.ask_change_education, pattern='^change_education$'),
+                                     CallbackQueryHandler(self.ask_payment, pattern='^employee_payment$')],
                 self.States.ASK_EDUCATION: [CallbackQueryHandler(self.back_to_employee, pattern='^back_to_employees$'),
-                                           CallbackQueryHandler(self.set_change_position, pattern='^edu_(higher_education|secondary_technical_education|secondary_education|specialized_secondary_education)$')]}
+                                           CallbackQueryHandler(self.set_change_position, pattern='^edu_(higher_education|secondary_technical_education|secondary_education|specialized_secondary_education)$')],
+                self.States.ASK_PAYMENT: [CallbackQueryHandler(self.back_to_employee, pattern='^back_to_employee$')]}
 
     def after_delete_text(self, context):
         return "Данные сотрудника удалены"
