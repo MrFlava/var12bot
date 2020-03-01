@@ -9,7 +9,7 @@ from telegram import InlineKeyboardButton
 from telegram.ext import CallbackQueryHandler, ConversationHandler
 
 
-from src.models import DBSession, Payment, Company, PaymentType, CompanyType
+from src.models import DBSession, Payment, Company
 
 
 class ServicePaymentsMenu(OneListMenu):

@@ -1,14 +1,12 @@
 import enum
 
-from botmanlib.menus import OneListMenu, ArrowAddEditMenu
-from botmanlib.menus.helpers import add_to_db, group_buttons
+from botmanlib.menus import OneListMenu
+from botmanlib.menus.helpers import group_buttons
 from botmanlib.messages import send_or_edit
-from formencode import validators
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackQueryHandler, ConversationHandler
+from telegram.ext import CallbackQueryHandler
 
-
-from src.models import DBSession, Employee, EmployeeEducation, EmployeePayment, Payment
+from src.models import DBSession, Employee,  EmployeePayment, Payment
 
 
 class EmployeesMenu(OneListMenu):
