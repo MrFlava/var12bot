@@ -7,6 +7,7 @@ from telegram import TelegramError, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ConversationHandler, CallbackQueryHandler, Filters, MessageHandler, PrefixHandler
 
 from src.models import User
+from src.menus.start.taxation_services import TaxationServiceMenu
 
 
 class StartMenu(BaseMenu):
@@ -49,11 +50,13 @@ class StartMenu(BaseMenu):
         return ConversationHandler.END
 
     def get_handler(self):
+        taxation_service_menu = TaxationServiceMenu(self)
 
         handler = ConversationHandler(entry_points=[PrefixHandler('/', 'start', self.entry),
                                                     CallbackQueryHandler(self.entry, pattern='^start$')],
                                       states={
-                                          self.States.ACTION: [PrefixHandler('/', 'admin', self.goto_next_menu)
+                                          self.States.ACTION: [PrefixHandler('/', 'admin', self.goto_next_menu),
+                                                               taxation_service_menu.handler
                                                                ]
                                       },
                                       fallbacks=[MessageHandler(Filters.all,
