@@ -12,7 +12,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler, ConversationHandler
 
 from src.models import TaxationService, DBSession, ServiceType
-# from src.menus.admin. import
+from src.menus.admin.employees import ServiceEmployeesMenu
 # from src.menus.admin. import
 
 
@@ -110,8 +110,10 @@ class ServicesMenu(OneListMenu):
 
         add_service = ServiceAddMenu(self)
         edit_service = ServiceEditMenu(self)
+        service_employees = ServiceEmployeesMenu(self)
         return {self.States.ACTION: [add_service.handler,
                                      edit_service.handler,
+                                     service_employees.handler,
                                      CallbackQueryHandler(self.ask_change_type, pattern='^change_type$')
                                      ],
                 self.States.ASK_TYPE: [CallbackQueryHandler(self.back_to_service, pattern='^back_to_service$'),

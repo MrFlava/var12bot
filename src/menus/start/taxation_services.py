@@ -6,7 +6,7 @@ from telegram import InlineKeyboardButton
 from telegram.ext import CallbackQueryHandler
 
 from src.models import TaxationService, DBSession
-# from src.menus.start. import PlayersMenu
+from src.menus.start.employees import EmployeesMenu
 # from src.menus.start. import UserTeamGamesMenu
 
 
@@ -53,7 +53,7 @@ class TaxationServiceMenu(OneListMenu):
         return group_buttons(buttons, 1)
 
     def additional_states(self):
-
+        employees_menu = EmployeesMenu(self)
         return {
-            self.States.ACTION: []
+            self.States.ACTION: [employees_menu.handler]
         }
