@@ -31,11 +31,31 @@ class ServiceType(enum.Enum):
     district = 'district'
     regional = 'regional'
 
+    def to_str(self):
+        if self is ServiceType.urban:
+            return "Городская"
+        elif self is ServiceType.district:
+            return "Районная"
+        elif self is ServiceType.regional:
+            return "Региональная"
+        else:
+            return "Неизвестно"
+
 
 class PaymentType(enum.Enum):
     value_added_tax = 'value added tax'
     income_tax = 'income tax'
     penalty_for_tax_evasion = 'penalty for tax evasion'
+
+    def to_str(self):
+        if self is PaymentType.value_added_tax:
+            return "Налог на добавленную стоимость"
+        elif self is PaymentType.income_tax:
+            return "Подоходный налог"
+        elif self is PaymentType.penalty_for_tax_evasion:
+            return "Штраф за уклонение от уплаты налогов"
+        else:
+            return "Неизвестно"
 
 
 class EmployeeEducation(enum.Enum):
@@ -43,6 +63,18 @@ class EmployeeEducation(enum.Enum):
     secondary_technical_education = 'secondary technical education'
     secondary_education = 'secondary education'
     specialized_secondary_education = 'specialized secondary education'
+
+    def to_str(self):
+        if self is EmployeeEducation.higher_education:
+            return "Высшее образование"
+        elif self is EmployeeEducation.secondary_technical_education:
+            return "Среднее техническое образование"
+        elif self is EmployeeEducation.secondary_education:
+            return "Среднее образование"
+        elif self is EmployeeEducation.specialized_secondary_education:
+            return "Среднее специальное образование"
+        else:
+            return "Неизвестно"
 
 
 class EmployeePayment(Base):

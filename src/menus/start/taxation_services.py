@@ -29,7 +29,7 @@ class TaxationServiceMenu(OneListMenu):
         if obj:
             message_text = "Отделения налоговых служб" + '\n'
             message_text += f"Номер отделения: {obj.id}" + '\n'
-            message_text += f"Тип: {obj.type}" + '\n'
+            message_text += f"Тип: {obj.type.to_str()}" + '\n'
             message_text += f"Название: {obj.name}" + '\n'
             message_text += f"Город: {obj.city}" + '\n'
             message_text += f"Работает с: {obj.year}" + '\n'
