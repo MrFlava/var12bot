@@ -1,9 +1,7 @@
 import enum
 
-
-from botmanlib.menus.helpers import translator
-from botmanlib.models import Database, BaseUser, UserPermissionsMixin, BasePermission, BaseUserSession, UserSessionsMixin, ModelPermissionsBase
-from sqlalchemy import Column, Float, Integer, Enum, String, ForeignKey, ARRAY, UniqueConstraint, Date, Table, DateTime
+from botmanlib.models import Database, BaseUser, UserPermissionsMixin, BasePermission, BaseUserSession, UserSessionsMixin
+from sqlalchemy import Column, Float, Integer, Enum, String, ForeignKey, DateTime
 from sqlalchemy.orm import object_session, relationship
 
 database = Database()
@@ -34,11 +32,26 @@ class ServiceType(enum.Enum):
     regional = 'regional'
 
 
+class PaymentType(enum.Enum):
+    value_added_tax = 'value added tax'
+    income_tax = 'income tax'
+    penalty_for_tax_evasion = 'penalty for tax evasion'
+
+
 class EmployeeEducation(enum.Enum):
     higher_education = 'higher education'
     secondary_technical_education = 'secondary technical education'
     secondary_education = 'secondary education'
     specialized_secondary_education = 'specialized secondary education'
+
+
+class EmployeePayment(Base):
+    __tablename__ = 'employee_payment_association_table'
+
+    employee_id = Column(Integer, ForeignKey('employees.id'), primary_key=True)
+    employee = relationship("Employee")
+    payment_id = Column(Integer, ForeignKey('payments.id'), primary_key=True)
+    payment = relationship("Payment")
 
 
 class TaxationService(Base):
@@ -53,6 +66,7 @@ class TaxationService(Base):
     address = Column(String, nullable=False)
 
     employees = relationship("Employee", back_populates='taxation_service', cascade='all ,delete')
+    payments = relationship("Payment", back_populates='taxation_service', cascade='all, delete')
 
 
 class Employee(Base):
@@ -67,6 +81,33 @@ class Employee(Base):
 
     taxation_service_id = Column(Integer, ForeignKey('taxation_services.id'), nullable=False)
     taxation_service = relationship("TaxationService", back_populates="employees")
+    payment = relationship("Payment", secondary=EmployeePayment.__table__, back_populates="employee", lazy='joined')
+
+
+class Payment(Base):
+    __tablename__ = 'payments'
+
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, nullable=False)
+    amount = Column(Float, nullable=False)
+    type = Column(Enum(PaymentType), default=PaymentType.income_tax)
+
+    taxation_service_id = Column(Integer, ForeignKey('taxation_services.id'), nullable=False)
+    taxation_service = relationship("TaxationService", back_populates="payments")
+    companies = relationship("Company", back_populates='payment', cascade='all ,delete')
+    employee = relationship("Employee", secondary=EmployeePayment.__table__, lazy='joined')
+
+
+class Company(Base):
+    __tablename__ = 'companies'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    year = Column(Integer, nullable=False)
+    phone = Column(String, nullable=False)
+    employees_quantity = Column(Integer, nullable=False)
+
+    payment_id = Column(Integer, ForeignKey('payments.id'), nullable=False)
+    payment = relationship("Payment", back_populates="companies")
 
 
 class UserSession(BaseUserSession, Base):
