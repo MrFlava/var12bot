@@ -7,7 +7,7 @@ from telegram.ext import CallbackQueryHandler
 
 from src.models import TaxationService, DBSession
 from src.menus.start.employees import EmployeesMenu
-# from src.menus.start. import UserTeamGamesMenu
+from src.menus.start.payments import PaymentsMenu
 
 
 class TaxationServiceMenu(OneListMenu):
@@ -54,6 +54,8 @@ class TaxationServiceMenu(OneListMenu):
 
     def additional_states(self):
         employees_menu = EmployeesMenu(self)
+        payments_menu = PaymentsMenu(self)
         return {
-            self.States.ACTION: [employees_menu.handler]
+            self.States.ACTION: [employees_menu.handler,
+                                 payments_menu.handler]
         }

@@ -77,6 +77,28 @@ class EmployeeEducation(enum.Enum):
             return "Неизвестно"
 
 
+class CompanyType(enum.Enum):
+    state = 'state'
+    private = 'private'
+    ZAO = 'ZAO'
+    OAO = 'OAO'
+    OOO = 'OOO'
+
+    def to_str(self):
+        if self is CompanyType.state:
+            return "Государственное"
+        elif self is CompanyType.private:
+            return "Частное"
+        elif self is CompanyType.ZAO:
+            return "ЗАО"
+        elif self is CompanyType.OAO:
+            return "ОАО"
+        elif self is CompanyType.OOO:
+            return "ООО"
+        else:
+            return "Неизвестно"
+
+
 class EmployeePayment(Base):
     __tablename__ = 'employee_payment_association_table'
 
@@ -133,6 +155,7 @@ class Payment(Base):
 class Company(Base):
     __tablename__ = 'companies'
     id = Column(Integer, primary_key=True)
+    type = Column(Enum(CompanyType), default=CompanyType.OOO)
     name = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
     phone = Column(String, nullable=False)
