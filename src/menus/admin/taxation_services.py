@@ -78,30 +78,29 @@ class ServicesMenu(OneListMenu):
                 buttons.append(InlineKeyboardButton("Удалить службу", callback_data=f"delete_{self.menu_name}"))
         return group_buttons(buttons, 1)
 
-    # def ask_change_league(self, update, context):
-    #     delete_refresh_job(context)
-    #     user = context.user_data['user']
-    #     buttons = []
-    #     message_text = "Пожалуйста, выберите новую принадлежность к лиге"
-    #     obj = self.selected_object(context)
-    #     if obj:
-    #         buttons.append([InlineKeyboardButton("Высшая лига", callback_data='league_highest')])
-    #         buttons.append([InlineKeyboardButton("Первая лига", callback_data='league_first')])
-    #         buttons.append([InlineKeyboardButton("Вторая лига", callback_data='league_second')])
-    #         buttons.append([InlineKeyboardButton("Третья лига", callback_data='league_third')])
-    #         buttons.append([InlineKeyboardButton("🔙 Back", callback_data=f'back_to_team')])
-    #         send_or_edit(context, chat_id=user.chat_id, text=message_text, reply_markup=InlineKeyboardMarkup(buttons, resize_keyboard=True))
-    #
-    #     return self.States.ASK_LEAGUE
-    #
-    # def set_change_league(self, update, context):
-    #     league_str = update.callback_query.data.replace("league_", "")
-    #     obj = self.selected_object(context)
-    #     obj.league = TeamLeague[league_str]
-    #     if not add_to_db(obj):
-    #         return self.conv_fallback(context)
-    #     self.send_message(context)
-    #     return self.States.ACTION
+    def ask_change_type(self, update, context):
+        delete_refresh_job(context)
+        user = context.user_data['user']
+        buttons = []
+        message_text = "Пожалуйста, выберите новый тип"
+        obj = self.selected_object(context)
+        if obj:
+            buttons.append([InlineKeyboardButton("Городская служба", callback_data='type_urban')])
+            buttons.append([InlineKeyboardButton("Районная служба", callback_data='type_district')])
+            buttons.append([InlineKeyboardButton("Региональная служба", callback_data='type_regional')])
+            buttons.append([InlineKeyboardButton("🔙 Назад", callback_data=f'back_to_service')])
+            send_or_edit(context, chat_id=user.chat_id, text=message_text, reply_markup=InlineKeyboardMarkup(buttons, resize_keyboard=True))
+
+        return self.States.ASK_TYPE
+
+    def set_change_type(self, update, context):
+        type_str = update.callback_query.data.replace("type_", "")
+        obj = self.selected_object(context)
+        obj.type = ServiceType[type_str]
+        if not add_to_db(obj):
+            return self.conv_fallback(context)
+        self.send_message(context)
+        return self.States.ACTION
 
     def back_to_service(self, update, context):
         self.send_message(context)
@@ -110,9 +109,13 @@ class ServicesMenu(OneListMenu):
     def additional_states(self):
 
         add_service = ServiceAddMenu(self)
-        # edit_service = ServiceEditMenu(self)
-        return {self.States.ACTION: [add_service.handler],
-                self.States.ASK_TYPE: []}
+        edit_service = ServiceEditMenu(self)
+        return {self.States.ACTION: [add_service.handler,
+                                     edit_service.handler,
+                                     CallbackQueryHandler(self.ask_change_type, pattern='^change_type$')
+                                     ],
+                self.States.ASK_TYPE: [CallbackQueryHandler(self.back_to_service, pattern='^back_to_service$'),
+                                       CallbackQueryHandler(self.set_change_type, pattern='^type_(urban|district|regional)$')]}
 
     def after_delete_text(self, context):
         return "Служба удалена"
@@ -152,33 +155,34 @@ class ServiceAddMenu(ArrowAddEditMenu):
             return self.conv_fallback(context)
 
 
-# class TeamEditMenu(ArrowAddEditMenu):
-#     menu_name = 'team_edit_menu'
-#     model = Team
-#
-#     def entry(self, update, context):
-#         return super(TeamEditMenu, self).entry(update, context)
-#
-#     def query_object(self, context):
-#
-#         team = self.parent.selected_object(context)
-#         if team:
-#             return DBSession.query(Team).filter(Team.id == team.id).first()
-#         else:
-#             self.parent.update_objects(context)
-#             self.parent.send_message(context)
-#             return ConversationHandler.END
-#
-#     def fields(self, context):
-#         fields = [self.Field('name', "*Назвнаие", validators.String(), required=True),
-#                   self.Field('city', "*Город", validators.String(), required=True),
-#                   self.Field('since', "*Год основания", validators.Number(), required=True, default=0),
-#                   self.Field('manager_FIO', "*ФИО Председателя", validators.String(), required=True),
-#                   self.Field('contact_number', "*Контактный телефон", PhoneNumber, required=True)]
-#         return fields
-#
-#     def entry_points(self):
-#         return [CallbackQueryHandler(self.entry, pattern='^edit_team$')]
+class ServiceEditMenu(ArrowAddEditMenu):
+    menu_name = 'service_edit_menu'
+    model = TaxationService
+
+    def entry(self, update, context):
+        return super(ServiceEditMenu, self).entry(update, context)
+
+    def query_object(self, context):
+
+        service = self.parent.selected_object(context)
+        if service:
+            return DBSession.query(TaxationService).filter(TaxationService.id == service.id).first()
+        else:
+            self.parent.update_objects(context)
+            self.parent.send_message(context)
+            return ConversationHandler.END
+
+    def fields(self, context):
+        year = datetime.datetime.now().year
+        fields = [self.Field('name', "*Назвнаие", validators.String(), required=True),
+                  self.Field('city', "*Город", validators.String(), required=True),
+                  self.Field('year', "*Работает с", validators.Number(min=1, max=year), required=True, default=0),
+                  self.Field('phone', "*Телефон", PhoneNumber, required=True),
+                  self.Field('address', "*Адрес", validators.String(), required=True)]
+        return fields
+
+    def entry_points(self):
+        return [CallbackQueryHandler(self.entry, pattern='^edit_service$')]
 
 
 
